@@ -69,9 +69,18 @@ def disentangleKey(key):
         Disentangles the key for class and labels obtained from the
         JSON file
     '''
+    dKey = {}
     for i in range(len(key)):
         class_id = int(key[i]['id'])
-        color = key
+        c = key[i]['color']
+        c = c.split(',')
+        c0 = int(c[0][1:])
+        c1 = int(c[1])
+        c2 = int(c[2][:-1])
+        color_array = np.asarray([c0,c1,c2])
+        dKey[class_id] = color_array
+
+        return dKey
 
 #TODO: Complete this
 def generateGTmask(batch, key):
