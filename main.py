@@ -141,16 +141,16 @@ def train(train_loader, model, optimizer, epoch, key):
 
         if use_gpu:
             data = data.cuda()
-            target = target.cuda()
+            label = label.cuda()
 
         #gt.view(-1)
         #print(target)
-        data, target = Variable(data), Variable(target, requires_grad=False)
+        data, label = Variable(data), Variable(label, requires_grad=False)
 
         optimizer.zero_grad()
         if args.with_reconstruction:
-            output, probs = model(data, target)
-            reconstruction_loss = F.mse_loss(output, data.view(-1, 784))
+            output, probs = model(data, label)
+            reconstruction_loss = F.mse_loss(output, label)
             # margin_loss = loss_fn(probs, target)
             # loss = reconstruction_alpha * reconstruction_loss + margin_loss
         else:
