@@ -2,7 +2,7 @@
 CapsNet: A PyTorch implementation of Sabour et al's paper
 Dynamic Routing between Capsules (https://arxiv.org/abs/1710.09829)
 
-Code adapted from: https://github.com/gram-ai/capsule-networks
+Code adapted from: https://github.com/adambielski/CapsNet-pytorch
 '''
 
 import torch
@@ -100,9 +100,9 @@ class PrimaryCapsLayer(nn.Module):
 
 
 class CapsNet(nn.Module):
-    def __init__(self, routing_iterations, n_classes=10):
+    def __init__(self, routing_iterations, n_classes=20):
         super(CapsNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 256, kernel_size=9, stride=1)
+        self.conv1 = nn.Conv2d(3, 256, kernel_size=9, stride=1)
         self.primaryCaps = PrimaryCapsLayer(256, 32, 8, kernel_size=9, stride=2)  # outputs 6*6
         self.num_primaryCaps = 32 * 6 * 6
         routing_module = AgreementRouting(self.num_primaryCaps, n_classes, routing_iterations)
@@ -130,11 +130,11 @@ class CapsNet(nn.Module):
 
 
 class ReconstructionNet(nn.Module):
-    def __init__(self, n_dim=16, n_classes=10):
+    def __init__(self, n_dim=16, n_classes=20):
         super(ReconstructionNet, self).__init__()
-        self.fc1 = nn.Linear(n_dim * n_classes, 512)
-        self.fc2 = nn.Linear(512, 1024)
-        self.fc3 = nn.Linear(1024, 784)
+        self.fc1 = nn.Linear(n_dim * n_classes, 10000)
+        self.fc2 = nn.Linear(10000, 20000)
+        self.fc3 = nn.Linear(20000, 16384)
         self.n_dim = n_dim
         self.n_classes = n_classes
 

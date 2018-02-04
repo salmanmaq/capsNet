@@ -35,7 +35,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
             help='manual epoch number (useful on restarts)')
 parser.add_argument('--batchSize', default=64, type=int,
             help='mini-batch size (default: 64)')
-parser.add_argument('--imageSize', default=64, type=int,
+parser.add_argument('--imageSize', default=128, type=int,
             help='height/width of the input image to the network')
 parser.add_argument('--lr', default=0.001, type=float,
             help='learning rate (default: 0.001)')
@@ -150,12 +150,9 @@ def train(train_loader, model, optimizer, epoch, key):
         optimizer.zero_grad()
         if args.with_reconstruction:
             output, probs = model(data, label)
-            reconstruction_loss = F.mse_loss(output, label)
+            loss = F.mse_loss(output, label)
             # margin_loss = loss_fn(probs, target)
             # loss = reconstruction_alpha * reconstruction_loss + margin_loss
-        else:
-            output, probs = model(data)
-            # loss = loss_fn(probs, target)
 
         loss.backward()
         optimizer.step()
