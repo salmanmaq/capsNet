@@ -12,6 +12,8 @@ import numpy as np
 import math
 from torch.autograd import Variable
 
+verbose = False
+
 def squash(x):
     lengths2 = x.pow(2).sum(dim=2)
     lengths = lengths2.sqrt()
@@ -78,14 +80,16 @@ class PrimaryCapsLayer(nn.Module):
 
     def forward(self, input):
         out = self.conv(input)
-        print('out pc')
-        print(out.data.shape)
+        if verbose:
+            print('out pc')
+            print(out.data.shape)
         N, C, H, W = out.size()
-        print('NCHW pc')
-        print(N)
-        print(C)
-        print(H)
-        print(W)
+        if verbose:
+            print('NCHW pc')
+            print(N)
+            print(C)
+            print(H)
+            print(W)
         out = out.view(N, self.output_caps, self.output_dim, H, W)
 
         # will output N x OUT_CAPS x OUT_DIM
@@ -105,18 +109,22 @@ class CapsNet(nn.Module):
         self.digitCaps = CapsLayer(self.num_primaryCaps, 8, n_classes, 16, routing_module)
 
     def forward(self, input):
-        print('Input')
-        print(input.data.shape)
+        if verbose:
+            print('Input')
+            print(input.data.shape)
         x = self.conv1(input)
         x = F.relu(x)
-        print('After conv1 and relu')
-        print(x.data.shape)
+        if verbose:
+            print('After conv1 and relu')
+            print(x.data.shape)
         x = self.primaryCaps(x)
-        print('After primary caps')
-        print(x.data.shape)
+        if verbose:
+            print('After primary caps')
+            print(x.data.shape)
         x = self.digitCaps(x)
-        print('After digit caps')
-        print(x.data.shape)
+        if verbose:
+            print('After digit caps')
+            print(x.data.shape)
         probs = x.pow(2).sum(dim=2).sqrt()
         return x, probs
 

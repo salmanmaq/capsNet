@@ -112,7 +112,9 @@ def main():
     # Define the optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    # Get the dictionary for the id and RGB value pairs for the dataset
     classes = image_datasets['train'].classes
+    key = utils.disentangleKey(classes)
 
     # Initialize the loss function
     # loss_fn = capsNet.MarginLoss(0.9, 0.1, 0.5)
@@ -120,23 +122,29 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
 
         # Train for one epoch
-        train(dataloaders['train'], model, optimizer, epoch, classes)
+        train(dataloaders['train'], model, optimizer, epoch, key)
 
         # Save checkpoints
         #torch.save(net.state_dict(), '%s/net_epoch_%d.pth' % (args.save_dir, epoch))
 
-def train(train_loader, model, optimizer, epoch, classes):
+def train(train_loader, model, optimizer, epoch, key):
     '''
         Run one training epoch
     '''
     model.train()
     for i, (data, target) in enumerate(train_loader):
+
+        # Generate the target vector from the groundtruth image
+        # Multiplication by 255 to convert from float to unit8
+        target_temp = target * 255
+        label = utils.generateGTmask(target, key)
+
         if use_gpu:
             data = data.cuda()
             target = target.cuda()
 
         #gt.view(-1)
-        print(target)
+        #print(target)
         data, target = Variable(data), Variable(target, requires_grad=False)
 
         optimizer.zero_grad()

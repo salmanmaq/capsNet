@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 import os
 import json
+import cv2
 
 class cityscapesDataset(Dataset):
     '''
@@ -46,9 +47,11 @@ class cityscapesDataset(Dataset):
         img_name = self.image_list[idx]
         gt_name = os.path.join(self.gt_dir, img_name[90:-15] + 'gtFine_color.png')
         image = Image.open(img_name)
-        image = image.convert('L')
+        image = image.convert('RGB')
         gt = Image.open(gt_name)
-        gt = gt.convert('L')
+        gt = gt.convert('RGB')
+        #gt = cv2.imread(gt_name, cv2.cvtColor)
+        #print(gt)
 
         if self.transform:
             image = self.transform(image)

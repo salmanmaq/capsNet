@@ -2,6 +2,7 @@
 Utilites for data visualization and manipulation.
 '''
 
+import torch
 import numpy as np
 import cv2
 
@@ -68,6 +69,8 @@ def disentangleKey(key):
     '''
         Disentangles the key for class and labels obtained from the
         JSON file
+        Returns a python dictionary of the form:
+            {Class Id: RGB Color Code as numpy array}
     '''
     dKey = {}
     for i in range(len(key)):
@@ -80,11 +83,36 @@ def disentangleKey(key):
         color_array = np.asarray([c0,c1,c2])
         dKey[class_id] = color_array
 
-        return dKey
+    return dKey
 
-#TODO: Complete this
 def generateGTmask(batch, key):
     '''
-        Generates the one-hot encoded tensor for the segmentation classes
-        for a batch of images
+        Generates the category-wise encoded vector for the segmentation classes
+        for a batch of images.
+        Returns a tensor of size: [batchSize, imgSize**2, 1]
     '''
+    batch = batch.numpy()
+    # Iterate over all images in a batch
+    for i in range(len(batch)):
+        img = batch[i,:,:,:]
+        img = np.transpose(img, (1,2,0))
+        cat_mask = np.ones((img.shape[0], img.shape[1]))
+        # Multiply by 19 since 19 is considered label for the background class
+        cat_mask = cat_mask * 19
+
+        # Iterate over all the key-value pairs in the class Key dict
+        for k in range(len(key)):
+            rgb = key[k]
+            mask = np.where(np.all(img == rgb, axis = -1))
+            cat_mask[mask] = k
+
+        cat_mask = torch.from_numpy(cat_mask).view(-1,1).unsqueeze(0)
+
+        if 'label' in locals():
+            label = torch.cat((label, cat_mask), 0)
+        else:
+            label = cat_mask
+        #print('img copy masked')
+        #print(img_copy)
+
+    return label
