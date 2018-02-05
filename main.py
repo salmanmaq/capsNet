@@ -21,6 +21,7 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
+import torch.nn.functional as F
 
 import models.capsNet as capsNet
 from dataset.cityscapesDataLoader import cityscapesDataset
@@ -101,7 +102,7 @@ def main():
     model = capsNet.CapsNet(args.routing_iterations)
 
     if args.with_reconstruction:
-        reconstruction_model = capsNet.ReconstructionNet(16, 10)
+        reconstruction_model = capsNet.ReconstructionNet(16, 20)
         reconstruction_alpha = 0.0005
         model = capsNet.CapsNetWithReconstruction(model, reconstruction_model)
 
@@ -137,7 +138,7 @@ def train(train_loader, model, optimizer, epoch, key):
         # Generate the target vector from the groundtruth image
         # Multiplication by 255 to convert from float to unit8
         target_temp = target * 255
-        label = utils.generateGTmask(target, key)
+        label = utils.generateGTmask(target, key).float()
 
         if use_gpu:
             data = data.cuda()
@@ -150,7 +151,7 @@ def train(train_loader, model, optimizer, epoch, key):
         optimizer.zero_grad()
         if args.with_reconstruction:
             output, probs = model(data, label)
-            loss = F.mse_loss(output, label)
+            loss = F.l1_loss(output, label)
             # margin_loss = loss_fn(probs, target)
             # loss = reconstruction_alpha * reconstruction_loss + margin_loss
 
@@ -158,8 +159,8 @@ def train(train_loader, model, optimizer, epoch, key):
         optimizer.step()
 
         print('[%d/%d][%d/%d] Loss: %.4f'
-              % (epoch, args.epochs, i, len(train_loader), loss))
-        #if i % args.print_freq == 0:
+              % (epoch, args.epochs, i, len(train_loader), loss.mean().data[0]))
+        if i % args.print_freq == 0:
         #    vutils.save_image(real_cpu,
         #            '%s/real_samples.png' % args.save_dir,
         #            normalize=True)
@@ -167,7 +168,7 @@ def train(train_loader, model, optimizer, epoch, key):
         #    vutils.save_image(fake.data,
         #            '%s/fake_samples_epoch_%03d.png' % (args.save_dir, epoch),
         #            normalize=True)
-        #    utils.displaySamples(real_cpu, fake, noiseForViz, gtForViz, use_gpu)
+            utils.displaySamples(data, output, target, use_gpu, key)
 
 if __name__ == '__main__':
     main()

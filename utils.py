@@ -5,20 +5,20 @@ Utilites for data visualization and manipulation.
 import torch
 import numpy as np
 import cv2
+import math
 
-def displaySamples(real, generated, genSeg, seg_mask, use_gpu):
+def displaySamples(data, generated, gt, use_gpu, key):
     ''' Display the original and the reconstructed image.
         If a batch is used, it displays only the first image in the batch.
 
         Args:
-            real image, output image
+            input image, output image, groundtruth segmentation,
+            use_gpu, class-wise key
     '''
 
     if use_gpu:
-        real = real.cpu()
+        data = data.cpu()
         generated = generated.cpu()
-        seg_mask = seg_mask.cpu()
-        genSeg = genSeg.cpu()
 
     #unNorm = UnNormalize(mean=[0.485,0.456,0.406],std=[0.229,0.224,0.225])
 
@@ -32,28 +32,26 @@ def displaySamples(real, generated, genSeg, seg_mask, use_gpu):
     # seg_mask = np.transpose(seg_mask, (1,2,0))
     # seg_mask = cv2.cvtColor(seg_mask, cv2.COLOR_BGR2RGB)
 
-    seg_mask = seg_mask.numpy()
-    seg_mask = np.transpose(np.squeeze(seg_mask[0,:,:,:]), (1,2,0))
-    seg_mask = cv2.cvtColor(seg_mask, cv2.COLOR_BGR2RGB)
+    gt = gt.numpy()
+    gt = np.transpose(np.squeeze(gt[0,:,:,:]), (1,2,0))
+    gt = cv2.cvtColor(gt, cv2.COLOR_BGR2RGB)
 
     generated = generated.data.numpy()
-    generated = np.transpose(np.squeeze(generated[0,:,:,:]), (1,2,0))
-    generated = cv2.cvtColor(generated, cv2.COLOR_BGR2RGB)
-    #output = unNorm(output)
+    generated = labelToImage(generated, key)
+    generated = generated * 255
 
-    genSeg = genSeg.data.numpy()
-    genSeg = np.transpose(np.squeeze(genSeg[0,:,:,:]), (1,2,0))
-    genSeg = cv2.cvtColor(genSeg, cv2.COLOR_BGR2RGB)
-
-    real = real.numpy()
-    real = np.transpose(np.squeeze(real[0,:,:,:]), (1,2,0))
-    real = cv2.cvtColor(real, cv2.COLOR_BGR2RGB)
+    data = data.data.numpy()
+    data = np.transpose(np.squeeze(data[0,:,:,:]), (1,2,0))
+    data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
     #real = unNorm(real)
 
-    stacked = np.concatenate((seg_mask, generated, genSeg, real), axis = 1)
+    print(generated)
 
-    cv2.namedWindow('Seg | Gen | GenSeg | Real', cv2.WINDOW_NORMAL)
-    cv2.imshow('Seg | Gen | GenSeg | Real', stacked)
+    stacked = np.concatenate((data, generated, gt), axis = 1)
+
+
+    cv2.namedWindow('Input | Gen | GT', cv2.WINDOW_NORMAL)
+    cv2.imshow('Input | Gen | GT', stacked)
 
     # cv2.namedWindow('Real Image', cv2.WINDOW_NORMAL)
     # cv2.namedWindow('Reconstructed Image', cv2.WINDOW_NORMAL)
@@ -116,3 +114,23 @@ def generateGTmask(batch, key):
         #print(img_copy)
 
     return label
+
+def labelToImage(label, key):
+    '''
+        Generates the image from the output label.
+        Basically the inverse process of the generateGTmask function.
+    '''
+
+    img_dim = int(math.sqrt(label.shape[1]))
+    label = label[0,:]
+    label = np.around(label)
+    gen = np.zeros((label.shape[0], 3))
+
+    for k in range(len(key)):
+        rgb = key[k]
+        mask = np.where(np.all(label == k, axis = -1))
+        gen[mask] = rgb
+
+    gen = np.reshape(gen, (img_dim, img_dim, 3))
+
+    return gen

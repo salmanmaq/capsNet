@@ -64,6 +64,11 @@ class CapsLayer(nn.Module):
 
     def forward(self, caps_output):
         caps_output = caps_output.unsqueeze(2)
+        if verbose:
+            print('caps_output shape')
+            print(caps_output.data.shape)
+            print('weights shape')
+            print(self.weights.data.shape)
         u_predict = caps_output.matmul(self.weights)
         u_predict = u_predict.view(u_predict.size(0), self.input_caps, self.output_caps, self.output_dim)
         v = self.routing_module(u_predict)
@@ -103,8 +108,10 @@ class CapsNet(nn.Module):
     def __init__(self, routing_iterations, n_classes=20):
         super(CapsNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 256, kernel_size=9, stride=1)
-        self.primaryCaps = PrimaryCapsLayer(256, 32, 8, kernel_size=9, stride=2)  # outputs 6*6
-        self.num_primaryCaps = 32 * 6 * 6
+        self.primaryCaps = PrimaryCapsLayer(256, 32, 8, kernel_size=9, stride=2)
+        # outputs 6*6 for 28*28 and 56*56 for 128*128
+        # 24*24 for 64*64
+        self.num_primaryCaps = 32 * 24 * 24
         routing_module = AgreementRouting(self.num_primaryCaps, n_classes, routing_iterations)
         self.digitCaps = CapsLayer(self.num_primaryCaps, 8, n_classes, 16, routing_module)
 
@@ -132,23 +139,38 @@ class CapsNet(nn.Module):
 class ReconstructionNet(nn.Module):
     def __init__(self, n_dim=16, n_classes=20):
         super(ReconstructionNet, self).__init__()
-        self.fc1 = nn.Linear(n_dim * n_classes, 10000)
-        self.fc2 = nn.Linear(10000, 20000)
-        self.fc3 = nn.Linear(20000, 16384)
+        self.fc1 = nn.Linear(n_dim * n_classes, 1000)
+        self.fc2 = nn.Linear(1000, 2000)
+        self.fc3 = nn.Linear(2000, 4096)
         self.n_dim = n_dim
         self.n_classes = n_classes
 
     def forward(self, x, target):
-        mask = Variable(torch.zeros((x.size()[0], self.n_classes)), requires_grad=False)
-        if next(self.parameters()).is_cuda:
-            mask = mask.cuda()
-        mask.scatter_(1, target.view(-1, 1), 1.)
-        mask = mask.unsqueeze(2)
-        x = x * mask
+        #mask = Variable(torch.zeros((x.size()[0], self.n_classes)), requires_grad=False)
+        #if next(self.parameters()).is_cuda:
+        #    mask = mask.cuda()
+        #mask.scatter_(1, target.view(-1, 1), 1.)
+        #mask = mask.unsqueeze(2)
+        #x = x * mask
+        if verbose:
+            print('Reconstruction Input')
+            print(x.data.shape)
         x = x.view(-1, self.n_dim * self.n_classes)
+        if verbose:
+            print('Reconstruction Input after flatten')
+            print(x.data.shape)
         x = F.relu(self.fc1(x))
+        if verbose:
+            print('Reconstruction Input after fc1')
+            print(x.data.shape)
         x = F.relu(self.fc2(x))
-        x = F.sigmoid(self.fc3(x))
+        if verbose:
+            print('Reconstruction Input after fc2')
+            print(x.data.shape)
+        x = self.fc3(x)
+        if verbose:
+            print('Reconstruction Input after fc3')
+            print(x.data.shape)
         return x
 
 
@@ -161,6 +183,11 @@ class CapsNetWithReconstruction(nn.Module):
     def forward(self, x, target):
         x, probs = self.capsnet(x)
         reconstruction = self.reconstruction_net(x, target)
+        if verbose:
+            print('probs shape')
+            print(probs.data.shape)
+            print('recons shape')
+            print(reconstruction.data.shape)
         return reconstruction, probs
 
 
