@@ -102,7 +102,7 @@ def main():
     model = capsNet.CapsNet(args.routing_iterations)
 
     if args.with_reconstruction:
-        reconstruction_model = capsNet.ReconstructionNet(16, 20)
+        reconstruction_model = capsNet.ReconstructionNet(20, 20)
         reconstruction_alpha = 0.0005
         model = capsNet.CapsNetWithReconstruction(model, reconstruction_model)
 

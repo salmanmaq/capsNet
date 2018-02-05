@@ -108,12 +108,12 @@ class CapsNet(nn.Module):
     def __init__(self, routing_iterations, n_classes=20):
         super(CapsNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 256, kernel_size=9, stride=1)
-        self.primaryCaps = PrimaryCapsLayer(256, 32, 8, kernel_size=9, stride=2)
+        self.primaryCaps = PrimaryCapsLayer(256, 40, 8, kernel_size=9, stride=2)
         # outputs 6*6 for 28*28 and 56*56 for 128*128
         # 24*24 for 64*64 and 40*40 for 96*96
-        self.num_primaryCaps = 32 * 40 * 40
+        self.num_primaryCaps = 40 * 40 * 40
         routing_module = AgreementRouting(self.num_primaryCaps, n_classes, routing_iterations)
-        self.digitCaps = CapsLayer(self.num_primaryCaps, 8, n_classes, 16, routing_module)
+        self.digitCaps = CapsLayer(self.num_primaryCaps, 8, n_classes, 20, routing_module)
 
     def forward(self, input):
         if verbose:
@@ -137,7 +137,7 @@ class CapsNet(nn.Module):
 
 
 class ReconstructionNet(nn.Module):
-    def __init__(self, n_dim=16, n_classes=20):
+    def __init__(self, n_dim=20, n_classes=20):
         super(ReconstructionNet, self).__init__()
         self.fc1 = nn.Linear(n_dim * n_classes, 1000)
         self.fc2 = nn.Linear(1000, 2000)
