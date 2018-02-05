@@ -45,7 +45,7 @@ def displaySamples(data, generated, gt, use_gpu, key):
     data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
     #real = unNorm(real)
 
-    print(generated)
+    # print(generated)
 
     stacked = np.concatenate((data, generated, gt), axis = 1)
 
@@ -113,6 +113,7 @@ def generateGTmask(batch, key):
         #print('img copy masked')
         #print(img_copy)
 
+    label = torch.squeeze(label, dim=2)
     return label
 
 def labelToImage(label, key):
@@ -123,13 +124,20 @@ def labelToImage(label, key):
 
     img_dim = int(math.sqrt(label.shape[1]))
     label = label[0,:]
-    label = np.around(label)
-    gen = np.zeros((label.shape[0], 3))
+    label = np.around(label).astype(int)
+    #print(label)
+    #print(np.min(label))
+    gen = np.ones((label.shape[0], 3)) * 255
 
-    for k in range(len(key)):
-        rgb = key[k]
-        mask = np.where(np.all(label == k, axis = -1))
+    for k in range(len(key) + 1):
+        if k == 19:
+            rgb = [0, 0, 0]
+        else:
+            rgb = key[k]
+        mask = label == k
         gen[mask] = rgb
+
+    # print(gen)
 
     gen = np.reshape(gen, (img_dim, img_dim, 3))
 

@@ -39,7 +39,7 @@ parser.add_argument('--batchSize', default=64, type=int,
 parser.add_argument('--imageSize', default=128, type=int,
             help='height/width of the input image to the network')
 parser.add_argument('--lr', default=0.001, type=float,
-            help='learning rate (default: 0.001)')
+            help='learning rate (default: 0.0005)')
 parser.add_argument('--net', default='',
             help="path to net (to continue training)")
 parser.add_argument('--print-freq', '-p', default=1, type=int, metavar='N',
@@ -154,6 +154,10 @@ def train(train_loader, model, optimizer, epoch, key):
             loss = F.l1_loss(output, label)
             # margin_loss = loss_fn(probs, target)
             # loss = reconstruction_alpha * reconstruction_loss + margin_loss
+
+        # if args.verbose:
+        print(output)
+        print(label)
 
         loss.backward()
         optimizer.step()
