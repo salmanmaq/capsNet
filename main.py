@@ -138,7 +138,8 @@ def train(train_loader, model, optimizer, epoch, key):
         # Generate the target vector from the groundtruth image
         # Multiplication by 255 to convert from float to unit8
         target_temp = target * 255
-        label = utils.generateGTmask(target, key).float()
+        label = utils.generateGTmask(target_temp, key)
+        print(torch.max(label))
 
         if use_gpu:
             data = data.cuda()
@@ -147,17 +148,17 @@ def train(train_loader, model, optimizer, epoch, key):
         #gt.view(-1)
         #print(target)
         data, label = Variable(data), Variable(label, requires_grad=False)
-
+        label = label.float()
         optimizer.zero_grad()
         if args.with_reconstruction:
             output, probs = model(data, label)
-            loss = F.l1_loss(output, label)
+            loss = F.mse_loss(output, label)
             # margin_loss = loss_fn(probs, target)
             # loss = reconstruction_alpha * reconstruction_loss + margin_loss
 
         # if args.verbose:
-        print(output)
-        print(label)
+        print(output[0,3000:3020])
+        print(label[0,3000:3020])
 
         loss.backward()
         optimizer.step()

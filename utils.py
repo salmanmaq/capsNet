@@ -38,7 +38,7 @@ def displaySamples(data, generated, gt, use_gpu, key):
 
     generated = generated.data.numpy()
     generated = labelToImage(generated, key)
-    generated = generated * 255
+    #generated = generated * 255
 
     data = data.data.numpy()
     data = np.transpose(np.squeeze(data[0,:,:,:]), (1,2,0))
