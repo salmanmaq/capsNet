@@ -70,15 +70,15 @@ def main():
     # Initialize the data transforms
     data_transforms = {
         'train': transforms.Compose([
-            transforms.Scale((args.imageSize, args.imageSize)),
+            transforms.Resize((args.imageSize, args.imageSize), interpolation=Image.NEAREST),
             transforms.ToTensor(),
         ]),
         'val': transforms.Compose([
-            transforms.Scale((args.imageSize, args.imageSize)),
+            transforms.Resize((args.imageSize, args.imageSize), interpolation=Image.NEAREST),
             transforms.ToTensor(),
         ]),
         'test': transforms.Compose([
-            transforms.Scale((args.imageSize, args.imageSize)),
+            transforms.Resize((args.imageSize, args.imageSize), interpolation=Image.NEAREST),
             transforms.ToTensor(),
         ]),
     }
